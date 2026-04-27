@@ -46,12 +46,14 @@ flowchart LR
 
 ```text
 credit_compliance/
++-- app.py                # Vercel entrypoint
 +-- main.py               # Flask app serving both frontend and API
 +-- generate_data.py      # Creates synthetic credit card compliance data
 +-- train_models.py       # Trains models and saves the best one
 +-- dataset.csv           # Generated/training dataset
 +-- pyproject.toml        # Python dependencies
 +-- requirements.txt      # pip install dependencies
++-- vercel.json           # Vercel routing config
 +-- uv.lock               # Locked dependency versions for uv users
 +-- models/
 |   +-- best_model.pkl    # Saved best model pipeline
@@ -107,6 +109,35 @@ The app runs at:
 ```text
 http://localhost:5000
 ```
+
+## Deploy On Vercel
+
+This project includes `app.py` and `vercel.json`, so Vercel can detect and run the Flask app.
+
+### Deploy from GitHub
+
+1. Push this project to GitHub.
+2. Open `https://vercel.com`.
+3. Click `Add New Project`.
+4. Import the GitHub repository.
+5. Keep the framework preset as `Other`.
+6. Click `Deploy`.
+
+### Deploy with Vercel CLI
+
+```bash
+npm install -g vercel
+vercel login
+vercel
+```
+
+For production deployment:
+
+```bash
+vercel --prod
+```
+
+Vercel will install dependencies from `requirements.txt` and route all requests through `app.py`.
 
 ## How To Use The App
 
