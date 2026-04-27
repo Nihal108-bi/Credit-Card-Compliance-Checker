@@ -1,0 +1,67 @@
+{
+  "best_model": "Random Forest",
+  "best_metrics": {
+    "name": "Random Forest",
+    "accuracy": 0.9167,
+    "f1": 0.902,
+    "roc_auc": 0.9861,
+    "cv_f1_mean": 0.9446,
+    "composite": 0.9349
+  },
+  "feature_names": [
+    "interest_rate",
+    "late_payment_fee",
+    "annual_fee",
+    "billing_cycle",
+    "minimum_payment_pct",
+    "disclosure_provided"
+  ],
+  "feature_importance": {
+    "interest_rate": 0.1502,
+    "late_payment_fee": 0.2019,
+    "annual_fee": 0.2556,
+    "billing_cycle": 0.1154,
+    "minimum_payment_pct": 0.1197,
+    "disclosure_provided": 0.1573
+  },
+  "leaderboard": [
+    {
+      "rank": 1,
+      "name": "Random Forest",
+      "accuracy": 0.9167,
+      "f1": 0.902,
+      "roc_auc": 0.9861,
+      "cv_f1": 0.9446,
+      "composite": 0.9349,
+      "is_best": true
+    },
+    {
+      "rank": 2,
+      "name": "Decision Tree",
+      "accuracy": 0.85,
+      "f1": 0.8364,
+      "roc_auc": 0.8547,
+      "cv_f1": 0.8559,
+      "composite": 0.847,
+      "is_best": false
+    },
+    {
+      "rank": 3,
+      "name": "Logistic Regression",
+      "accuracy": 0.7667,
+      "f1": 0.7083,
+      "roc_auc": 0.8519,
+      "cv_f1": 0.8227,
+      "composite": 0.7756,
+      "is_best": false
+    }
+  ],
+  "compliance_rules": {
+    "interest_rate": "Must be between 12% and 42%",
+    "late_payment_fee": "Must be \u2264 \u20b91,200",
+    "annual_fee": "Must be \u2264 \u20b95,000",
+    "billing_cycle": "Must be 25\u201345 days",
+    "minimum_payment_pct": "Must be between 2% and 10%",
+    "disclosure_provided": "Must be Yes (1)"
+  }
+}

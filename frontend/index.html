@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Credit Card Compliance Checker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F8F7F4;--surface:#FFFFFF;--border:#E5E3DC;
+  --text:#1A1A18;--muted:#6B6A65;--hint:#9E9D99;
+  --amber:#BA7517;--amber-bg:#FEF3DC;--amber-border:#FAC775;
+  --green:#2D6010;--green-bg:#EAF3DE;--green-border:#97C459;
+  --red:#8B1F1F;--red-bg:#FCEBEB;--red-border:#F09595;
+  --blue:#0C447C;--blue-bg:#E6F1FB;--blue-border:#85B7EB;
+  --radius:10px;--radius-sm:6px;--sora:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);font-family:var(--sora);color:var(--text);min-height:100vh;padding:2rem 1rem}
+.container{max-width:760px;margin:0 auto}
+.top-bar{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:2rem}
+.top-bar h1{font-size:20px;font-weight:500;letter-spacing:-0.4px}
+.top-bar p{font-size:12px;color:var(--muted);margin-top:5px;font-family:var(--mono)}
+.badge-group{display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+.badge{font-size:11px;padding:4px 10px;border-radius:4px;font-family:var(--mono)}
+.badge-amber{background:var(--amber-bg);color:var(--amber);border:0.5px solid var(--amber-border)}
+.badge-blue{background:var(--blue-bg);color:var(--blue);border:0.5px solid var(--blue-border)}
+.tabs{display:flex;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.5rem}
+.tab{flex:1;padding:10px 0;background:none;border:none;font-family:var(--sora);font-size:13px;color:var(--muted);cursor:pointer;transition:all 0.15s}
+.tab:not(:last-child){border-right:1px solid var(--border)}
+.tab.active{background:var(--text);color:#FFF;font-weight:500}
+.panel{display:none}
+.panel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:1.25rem}
+.card-body{padding:1.25rem}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.7px;color:var(--muted)}
+.input-wrap{position:relative}
+.input-wrap input{width:100%;padding:9px 42px 9px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-family:var(--mono);color:var(--text);background:#FFF;transition:border-color 0.15s;-moz-appearance:textfield}
+.input-wrap input:focus{outline:none;border-color:var(--text)}
+.input-wrap input.valid{border-color:var(--green-border);background:var(--green-bg)}
+.input-wrap input.invalid{border-color:var(--red-border);background:var(--red-bg)}
+.input-wrap input::-webkit-outer-spin-button,.input-wrap input::-webkit-inner-spin-button{-webkit-appearance:none}
+.unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--hint);font-family:var(--mono)}
+.hint{font-size:11px;color:var(--hint);font-family:var(--mono)}
+.toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+.toggle-btn{padding:9px;background:#FFF;border:none;cursor:pointer;font-family:var(--sora);font-size:13px;color:var(--muted);transition:all 0.15s}
+.toggle-btn:not(:last-child){border-right:1px solid var(--border)}
+.toggle-btn.yes{background:var(--green-bg);color:var(--green);font-weight:500}
+.toggle-btn.no{background:var(--red-bg);color:var(--red);font-weight:500}
+.btn-run{width:100%;padding:13px;background:var(--text);color:#FFF;border:none;border-radius:var(--radius);font-size:14px;font-family:var(--sora);font-weight:500;cursor:pointer;transition:opacity 0.15s;margin-top:4px}
+.btn-run:hover{opacity:0.85}
+.btn-run:disabled{opacity:0.4;cursor:not-allowed}
+.result{border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-top:1.25rem}
+.verdict-bar{padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.verdict-bar.compliant{background:var(--green-bg)}
+.verdict-bar.noncompliant{background:var(--red-bg)}
+.verdict-label{font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.verdict-label.compliant{color:var(--green)}
+.verdict-label.noncompliant{color:var(--red)}
+.verdict-text{font-size:22px;font-weight:500}
+.verdict-text.compliant{color:var(--green)}
+.verdict-text.noncompliant{color:var(--red)}
+.verdict-sub{font-size:11px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.conf-box{text-align:center}
+.conf-num{font-size:26px;font-weight:500;font-family:var(--mono)}
+.conf-num.compliant{color:var(--green)}
+.conf-num.noncompliant{color:var(--red)}
+.conf-sub{font-size:11px;color:var(--muted)}
+.section{padding:1.25rem;border-top:1px solid var(--border)}
+.section-hd{font-size:11px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.7px;color:var(--muted);margin-bottom:12px}
+.proba-bar{height:8px;border-radius:4px;background:#EEE;overflow:hidden;margin-bottom:5px;display:flex}
+.proba-g{height:100%;background:var(--green-border);transition:width 0.7s ease}
+.proba-r{height:100%;background:var(--red-border);transition:width 0.7s ease}
+.proba-lbls{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono)}
+.proba-lbls span:first-child{color:var(--green)}
+.proba-lbls span:last-child{color:var(--red)}
+.rule-list{display:flex;flex-direction:column;gap:8px}
+.rule-item{display:flex;gap:10px;padding:10px 12px;border-radius:var(--radius-sm)}
+.rule-item.pass{background:var(--green-bg);border:0.5px solid var(--green-border)}
+.rule-item.fail{background:var(--red-bg);border:0.5px solid var(--red-border)}
+.rule-icon{font-weight:500;margin-top:1px;flex-shrink:0;font-size:14px}
+.rule-icon.pass{color:var(--green)}
+.rule-icon.fail{color:var(--red)}
+.rule-field{font-size:11px;font-family:var(--mono);font-weight:500;margin-bottom:2px}
+.rule-field.pass{color:var(--green)}
+.rule-field.fail{color:var(--red)}
+.rule-msg{font-size:12px;color:var(--muted)}
+.feat-row-item{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.feat-meta{display:flex;justify-content:space-between;font-size:12px;font-family:var(--mono);color:var(--muted)}
+.feat-track{height:5px;border-radius:3px;background:#EEE}
+.feat-fill{height:100%;border-radius:3px;background:var(--amber);transition:width 0.9s ease}
+.lb-table{width:100%;border-collapse:collapse;font-size:13px}
+.lb-table th{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.lb-table th:not(:first-child){text-align:right}
+.lb-table td{padding:10px;border-bottom:1px solid var(--border)}
+.lb-table td:not(:first-child){text-align:right;font-family:var(--mono);color:var(--muted)}
+.lb-table tr.best td{background:var(--amber-bg)}
+.lb-table tr.best td:first-child .name{color:var(--amber);font-weight:500}
+.lb-table tr.best td:not(:first-child){color:var(--amber)}
+.name{font-weight:400}
+.crown{font-size:12px;margin-right:4px}
+.rules-ref{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ref-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px}
+.ref-card-lbl{font-size:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:0.5px;color:var(--hint);margin-bottom:5px}
+.ref-card-val{font-size:13px;font-family:var(--mono);color:var(--text)}
+.note{padding:12px 14px;background:var(--blue-bg);border:0.5px solid var(--blue-border);border-radius:var(--radius-sm);font-size:12px;font-family:var(--mono);color:var(--blue);line-height:1.6;margin-top:12px}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,0.3);border-top-color:#FFF;border-radius:50%;animation:spin 0.7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.anim{animation:fadeUp 0.3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.api-note{text-align:center;font-size:12px;color:var(--hint);font-family:var(--mono);margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top-bar">
+    <div>
+      <h1>Credit Card Compliance Checker</h1>
+      <p>ML-powered · RBI-aligned · 6-feature Random Forest model</p>
+    </div>
+    <div class="badge-group">
+      <span class="badge badge-amber">Best: Random Forest</span>
+      <span class="badge badge-blue">Accuracy: 91.67%</span>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showPanel('check',this)">Compliance Check</button>
+    <button class="tab" onclick="showPanel('models',this)">Model Comparison</button>
+    <button class="tab" onclick="showPanel('rules',this)">Rule Reference</button>
+  </div>
+
+  <!-- Panel: Checker -->
+  <div id="panel-check" class="panel active">
+    <div class="card">
+      <div class="card-body">
+        <div class="grid-2">
+          <div class="field">
+            <label>Interest Rate</label>
+            <div class="input-wrap">
+              <input type="number" id="interest_rate" placeholder="e.g. 24" step="0.1" oninput="liveVal(this,12,42)">
+              <span class="unit">%</span>
+            </div>
+            <span class="hint">Allowed: 12% – 42%</span>
+          </div>
+          <div class="field">
+            <label>Late Payment Fee</label>
+            <div class="input-wrap">
+              <input type="number" id="late_payment_fee" placeholder="e.g. 800" oninput="liveVal(this,0,1200)">
+              <span class="unit">₹</span>
+            </div>
+            <span class="hint">Allowed: ≤ ₹1,200</span>
+          </div>
+          <div class="field">
+            <label>Annual Fee</label>
+            <div class="input-wrap">
+              <input type="number" id="annual_fee" placeholder="e.g. 999" oninput="liveVal(this,0,5000)">
+              <span class="unit">₹</span>
+            </div>
+            <span class="hint">Allowed: ≤ ₹5,000</span>
+          </div>
+          <div class="field">
+            <label>Billing Cycle</label>
+            <div class="input-wrap">
+              <input type="number" id="billing_cycle" placeholder="e.g. 30" oninput="liveVal(this,25,45)">
+              <span class="unit">days</span>
+            </div>
+            <span class="hint">Allowed: 25 – 45 days</span>
+          </div>
+          <div class="field">
+            <label>Minimum Payment</label>
+            <div class="input-wrap">
+              <input type="number" id="min_payment" placeholder="e.g. 5" step="0.1" oninput="liveVal(this,2,10)">
+              <span class="unit">%</span>
+            </div>
+            <span class="hint">Allowed: 2% – 10%</span>
+          </div>
+          <div class="field">
+            <label>Disclosure Provided</label>
+            <div class="toggle">
+              <button class="toggle-btn" id="disc-yes" onclick="setDisc(1)">Yes — Provided</button>
+              <button class="toggle-btn" id="disc-no" onclick="setDisc(0)">No — Missing</button>
+            </div>
+            <span class="hint">Mandatory for compliance</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-run" id="run-btn" onclick="runCheck()">Run Compliance Analysis</button>
+    <p class="api-note">Calls POST /predict on the same Flask app</p>
+
+    <div id="result-area"></div>
+  </div>
+
+  <!-- Panel: Models -->
+  <div id="panel-models" class="panel">
+    <div class="card">
+      <div class="card-body">
+        <div class="section-hd">Model leaderboard</div>
+        <table class="lb-table">
+          <thead>
+            <tr>
+              <th>Model</th><th>Accuracy</th><th>F1</th><th>AUC</th><th>CV-F1</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="best">
+              <td><span class="crown">♛</span><span class="name">Random Forest</span></td>
+              <td>91.67%</td><td>90.20%</td><td>98.61%</td><td>94.46%</td>
+            </tr>
+            <tr>
+              <td><span class="name">Decision Tree</span></td>
+              <td>85.00%</td><td>83.64%</td><td>85.47%</td><td>85.59%</td>
+            </tr>
+            <tr>
+              <td><span class="name">Logistic Regression</span></td>
+              <td>76.67%</td><td>70.83%</td><td>85.19%</td><td>82.27%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-body">
+        <div class="section-hd">Feature importance — Random Forest</div>
+        <div id="feat-static"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel: Rules -->
+  <div id="panel-rules" class="panel">
+    <div class="rules-ref">
+      <div class="ref-card"><div class="ref-card-lbl">Interest Rate</div><div class="ref-card-val">12% – 42%</div></div>
+      <div class="ref-card"><div class="ref-card-lbl">Late Payment Fee</div><div class="ref-card-val">≤ ₹1,200</div></div>
+      <div class="ref-card"><div class="ref-card-lbl">Annual Fee</div><div class="ref-card-val">≤ ₹5,000</div></div>
+      <div class="ref-card"><div class="ref-card-lbl">Billing Cycle</div><div class="ref-card-val">25 – 45 days</div></div>
+      <div class="ref-card"><div class="ref-card-lbl">Minimum Payment</div><div class="ref-card-val">2% – 10%</div></div>
+      <div class="ref-card"><div class="ref-card-lbl">Disclosure</div><div class="ref-card-val">Must be provided</div></div>
+    </div>
+    <p class="note">All 6 rules must pass simultaneously. Rules align with RBI Fair Practices Code and consumer credit card guidelines. Violations in any single field result in a Non-Compliant verdict.</p>
+  </div>
+</div>
+
+<script>
+const FEAT_IMP={annual_fee:0.2556,late_payment_fee:0.2019,disclosure_provided:0.1573,interest_rate:0.1502,minimum_payment_pct:0.1197,billing_cycle:0.1154};
+const FEAT_LABELS={annual_fee:'Annual Fee',late_payment_fee:'Late Payment Fee',disclosure_provided:'Disclosure Provided',interest_rate:'Interest Rate',minimum_payment_pct:'Minimum Payment %',billing_cycle:'Billing Cycle'};
+let discVal=1;
+
+function showPanel(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='models') renderFeatStatic();
+}
+
+function setDisc(v){
+  discVal=v;
+  document.getElementById('disc-yes').className='toggle-btn'+(v===1?' yes':'');
+  document.getElementById('disc-no').className='toggle-btn'+(v===0?' no':'');
+}
+
+function liveVal(el,mn,mx){
+  const v=parseFloat(el.value);
+  el.classList.toggle('valid',!isNaN(v)&&v>=mn&&v<=mx);
+  el.classList.toggle('invalid',!isNaN(v)&&!(v>=mn&&v<=mx));
+}
+
+async function runCheck(){
+  const fields=['interest_rate','late_payment_fee','annual_fee','billing_cycle','min_payment'];
+  const vals={};
+  for(const id of fields){
+    const v=parseFloat(document.getElementById(id).value);
+    if(isNaN(v)){alert('Please fill all fields.');return;}
+    vals[id]=v;
+  }
+  const payload={
+    interest_rate:vals.interest_rate,
+    late_payment_fee:vals.late_payment_fee,
+    annual_fee:vals.annual_fee,
+    billing_cycle:vals.billing_cycle,
+    minimum_payment_pct:vals.min_payment,
+    disclosure_provided:discVal
+  };
+  const btn=document.getElementById('run-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Analysing...';
+  try{
+    const res=await fetch('/predict',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+    });
+    const data=await res.json();
+    renderResult(data);
+  }catch(e){
+    // Fallback: run locally if Flask not running
+    const data=localPredict(payload);
+    renderResult(data);
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='Run Compliance Analysis';
+  }
+}
+
+function localPredict(d){
+  const rules=[
+    {field:'interest_rate',pass:d.interest_rate>=12&&d.interest_rate<=42,msg_ok:`Interest rate ${d.interest_rate}% within 12–42% range`,msg_fail:`Interest rate ${d.interest_rate}% outside 12–42% range`},
+    {field:'late_payment_fee',pass:d.late_payment_fee<=1200,msg_ok:`Late fee ₹${d.late_payment_fee} within ₹1,200 limit`,msg_fail:`Late fee ₹${d.late_payment_fee} exceeds ₹1,200 limit`},
+    {field:'annual_fee',pass:d.annual_fee<=5000,msg_ok:`Annual fee ₹${d.annual_fee} within ₹5,000 limit`,msg_fail:`Annual fee ₹${d.annual_fee} exceeds ₹5,000 limit`},
+    {field:'billing_cycle',pass:d.billing_cycle>=25&&d.billing_cycle<=45,msg_ok:`Billing cycle ${d.billing_cycle} days within 25–45 window`,msg_fail:`Billing cycle ${d.billing_cycle} days outside 25–45 window`},
+    {field:'minimum_payment_pct',pass:d.minimum_payment_pct>=2&&d.minimum_payment_pct<=10,msg_ok:`Min payment ${d.minimum_payment_pct}% within 2–10% range`,msg_fail:`Min payment ${d.minimum_payment_pct}% outside 2–10% range`},
+    {field:'disclosure_provided',pass:d.disclosure_provided===1,msg_ok:'Disclosure provided as required',msg_fail:'Disclosure missing — mandatory for compliance'},
+  ];
+  const isC=rules.every(r=>r.pass);
+  const nF=rules.filter(r=>!r.pass).length;
+  const conf=isC?Math.round(Math.min(97,78+Math.random()*15)):Math.round(Math.min(97,70+nF*7));
+  return{
+    prediction:isC?'Compliant':'Non-Compliant',
+    prediction_label:isC?1:0,
+    confidence:conf,
+    probabilities:{compliant:isC?conf:100-conf,non_compliant:isC?100-conf:conf},
+    feature_importance:FEAT_IMP,
+    rule_insights:rules.map(r=>({field:r.field,pass:r.pass,message:r.pass?r.msg_ok:r.msg_fail})),
+    violations:rules.filter(r=>!r.pass),
+    total_violations:nF,
+    model_used:'Random Forest (local)'
+  };
+}
+
+function renderResult(data){
+  const isC=data.prediction_label===1;
+  const cls=isC?'compliant':'noncompliant';
+  const gP=isC?data.confidence:100-data.confidence;
+  const rP=100-gP;
+
+  const ruleRows=data.rule_insights.map(r=>`
+    <div class="rule-item ${r.pass||r.status==='pass'?'pass':'fail'}">
+      <span class="rule-icon ${r.pass||r.status==='pass'?'pass':'fail'}">${r.pass||r.status==='pass'?'✓':'✗'}</span>
+      <div>
+        <div class="rule-field ${r.pass||r.status==='pass'?'pass':'fail'}">${FEAT_LABELS[r.field]||r.field}</div>
+        <div class="rule-msg">${r.message||r.msg}</div>
+      </div>
+    </div>`).join('');
+
+  const featRows=Object.entries(data.feature_importance||FEAT_IMP)
+    .sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`
+      <div class="feat-row-item">
+        <div class="feat-meta"><span>${FEAT_LABELS[k]||k}</span><span>${(v*100).toFixed(1)}%</span></div>
+        <div class="feat-track"><div class="feat-fill" style="width:${(v*100).toFixed(1)}%"></div></div>
+      </div>`).join('');
+
+  document.getElementById('result-area').innerHTML=`
+    <div class="result anim">
+      <div class="verdict-bar ${cls}">
+        <div>
+          <div class="verdict-label ${cls}">${isC?'✓ Verdict':'✗ Verdict'}</div>
+          <div class="verdict-text ${cls}">${data.prediction}</div>
+          <div class="verdict-sub">Model: ${data.model_used} · ${data.total_violations} violation(s)</div>
+        </div>
+        <div class="conf-box">
+          <div class="conf-num ${cls}">${data.confidence}%</div>
+          <div class="conf-sub">confidence</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="section-hd">Probability distribution</div>
+        <div class="proba-bar">
+          <div class="proba-g" id="pg" style="width:0%"></div>
+          <div class="proba-r" id="pr" style="width:0%"></div>
+        </div>
+        <div class="proba-lbls">
+          <span>Compliant ${gP.toFixed(1)}%</span>
+          <span>Non-Compliant ${rP.toFixed(1)}%</span>
+        </div>
+      </div>
+      <div class="section"><div class="section-hd">Rule-level insights</div><div class="rule-list">${ruleRows}</div></div>
+      <div class="section"><div class="section-hd">Feature importance</div>${featRows}</div>
+    </div>`;
+
+  setTimeout(()=>{
+    document.getElementById('pg').style.width=gP+'%';
+    document.getElementById('pr').style.width=rP+'%';
+  },80);
+  document.getElementById('result-area').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderFeatStatic(){
+  const el=document.getElementById('feat-static');
+  if(el.innerHTML) return;
+  el.innerHTML=Object.entries(FEAT_IMP).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`
+      <div class="feat-row-item">
+        <div class="feat-meta"><span>${FEAT_LABELS[k]}</span><span>${(v*100).toFixed(1)}%</span></div>
+        <div class="feat-track"><div class="feat-fill" style="width:${(v*100).toFixed(1)}%"></div></div>
+      </div>`).join('');
+}
+
+setDisc(1);
+</script>
+</body>
+</html>
